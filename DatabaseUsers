@@ -1,0 +1,125 @@
+/*--------------------------------------------------------------------------*/
+import java.sql.*;
+import java.util.Scanner;
+
+public class Database {
+    private String urlDatabase;
+    private String user;
+    private String password;
+    private String database;
+    private String url;
+    private Connection conn;
+    private Statement st;
+    Scanner sc = new Scanner(System.in);
+    ResultSet ResSet;
+
+    public Database(String user, String password) {
+        url = "jdbc:mysql://localhost:3306";
+        this.urlDatabase = url + "?user=" + user + "&password=" + password;
+    }
+
+    public void menu(){
+        Scanner scMenu = new Scanner(System.in);
+        connetti(dichiaraDatabase());
+        while(true){
+            System.out.println("Scegliere quale operazione compiere. Digitare:");
+            System.out.println("1 - per creare una tabella;\n2 - per estrarre tutti i record da una tabella;");
+            System.out.println("3 - per inserire nuovi utenti nella tabella;\n9 - per uscire dal programma.");
+            String impSc = scMenu.nextLine();
+            char scelta = impSc.charAt(0);
+            switch(scelta){
+                case('1'):
+                    creaTabella(dichiaraTabella());
+                    break;
+                case('2'):
+                    estrai(dichiaraTabella());
+                    break;
+                case('3'):
+                    inserisci(dichiaraTabella());
+                    break;
+                case('9'):
+                    System.out.println("Programma in chiusura...");
+                    System.exit(0);
+                    break;
+                default:
+                    System.out.println("Scelta non valida.");
+                    break;
+            }
+        }
+    }
+    public String dichiaraDatabase(){
+        System.out.println("Inserire il nome del database da creare e/o richiamare");
+        database = sc.nextLine();
+        return database;
+    }
+    public String dichiaraTabella(){
+        System.out.println("Inserire il nome della tabella da creare o richiamare.");
+        String tab = sc.nextLine();
+        return tab;
+    }
+    public Connection connetti(String database){
+        try{
+            conn = DriverManager.getConnection(urlDatabase);
+            st = conn.createStatement();
+            String sql = "CREATE DATABASE IF NOT EXISTS " + database;
+            st.executeUpdate(sql);
+            sql = "USE " + database;
+            st.executeUpdate(sql);
+            System.out.println("Database creato/richiamato correttamente.");
+        }catch(SQLException e){
+            System.out.println("Impossibile stabilire connessione col database." + e.getMessage());
+        }
+        return conn;
+    }
+
+    public void creaTabella(String tabella){
+        String sql = "CREATE TABLE IF NOT EXISTS " + tabella + " (id INT(10) primary key auto_increment, " +
+                "cognome char(20) NOT NULL, nome char(20) NOT NULL, numtel char(15) NOT NULL)";
+        try{
+            st = conn.createStatement();
+            st.executeUpdate(sql);
+            System.out.println("Tabella creata/richiamata.");
+        }catch(SQLException e){
+            System.out.println("Impossibile creare la tabella." + e.getMessage());
+        }
+    }
+    public void inserisci(String tabella){
+        System.out.println("Inserire il cognome del record da aggiungere.");
+        String cognome = sc.nextLine();
+        System.out.println("Inserire il nome del record da aggiungere.");
+        String nome = sc.nextLine();
+        System.out.println("Inserire il numero di telefono del record da aggiungere.");
+        String numtel = sc.nextLine();
+        String sql = "INSERT INTO " + tabella + " VALUES (null, '" + cognome + "', '" + nome + "', '" + numtel + "')";
+        try{
+            st = conn.createStatement();
+            st.executeUpdate(sql);
+            System.out.println("Dati inseriti in tabella.");
+        }catch(SQLException e){
+            System.out.println("Impossibile inserire in tabella." + e.getMessage());
+        }
+    }
+
+    public void estrai(String tabella){
+        try{
+            ResSet = st.executeQuery("SELECT * FROM " + tabella);
+            while(ResSet.next()){
+                System.out.println("Id: " + ResSet.getInt(1));
+                System.out.println("Cognome: " + ResSet.getString(2));
+                System.out.println("Nome: " + ResSet.getString(3));
+                System.out.println("Numero di telefono: " + ResSet.getString(4));
+                System.out.println("");
+            }
+        }catch(SQLException e){
+            System.out.println("Impossibile estrarre i dati." + e.getMessage());
+        }
+    }
+}
+/*-----------------------------------------------------------------------------------------------------*/
+public class Main {
+    public static void main(String[] args) {
+        Database db1 = new Database("root", "");
+        db1.menu();
+    }
+}
+/*----------------------------------------------------------------------------------------------------*/
